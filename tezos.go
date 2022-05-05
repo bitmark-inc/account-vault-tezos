@@ -7,16 +7,11 @@ import (
 )
 
 const (
+	DefaultDerivationPath = "m/44'/1729'/0'/0'"
+
 	MAINNETChainID     = "NetXdQprcVkpaWU"
-	ITHACANETChainID   = "NetXbhmtAbMukLc"
 	HANGZHOUNETChainID = "NetXZSsxBpMQeAT"
-
-	LiveMAINNET     Network = "MAINNET"
-	TestITHACANET   Network = "ITHACANET"
-	TestHANGZHOUNET Network = "HANGZHOUNET"
 )
-
-const DefaultDerivationPath = "m/44'/1729'/0'/0'"
 
 type Wallet struct {
 	chainID    string
@@ -24,28 +19,19 @@ type Wallet struct {
 	rpcClient  *rpc.Client
 }
 
-type Network string
-
-func (n *Network) ChainID() string {
-	switch *n {
-	case LiveMAINNET:
-		return MAINNETChainID
-	case TestITHACANET:
-		return ITHACANETChainID
-	case TestHANGZHOUNET:
-		return HANGZHOUNETChainID
-	}
-	return ""
-}
-
 // NewWallet creates a tezos wallet from a given seed
-func NewWallet(seed []byte, network Network, rpcURL string) (*Wallet, error) {
+func NewWallet(seed []byte, network string, rpcURL string) (*Wallet, error) {
 	key := tezos.PrivateKey{
 		Type: tezos.KeyTypeSecp256k1,
 	}
 	wallet, err := hdwallet.NewFromSeed(seed)
 	if err != nil {
 		return nil, err
+	}
+
+	chainID := HANGZHOUNETChainID
+	if network == "livenet" {
+		chainID = MAINNETChainID
 	}
 
 	path := hdwallet.MustParseDerivationPath(DefaultDerivationPath)
@@ -66,7 +52,7 @@ func NewWallet(seed []byte, network Network, rpcURL string) (*Wallet, error) {
 	}
 
 	return &Wallet{
-		chainID:    network.ChainID(),
+		chainID:    chainID,
 		privateKey: key,
 		rpcClient:  c,
 	}, nil
