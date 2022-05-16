@@ -72,7 +72,3 @@ func (w *Wallet) Account() string {
 func (w *Wallet) ChainID() string {
 	return w.chainID
 }
-
-// func (w *Wallet) Sign() error {
-
-// }
