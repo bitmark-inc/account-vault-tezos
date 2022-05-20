@@ -1,60 +1,86 @@
 package tezos
 
 import (
+	"context"
+	"errors"
+	"fmt"
+
+	ed25519hd "github.com/bitmark-inc/go-ed25519-hd"
+
 	"blockwatch.cc/tzgo/rpc"
 	"blockwatch.cc/tzgo/tezos"
-	hdwallet "github.com/miguelmota/go-ethereum-hdwallet"
 )
 
 const (
-	DefaultDerivationPath = "m/44'/1729'/0'/0'"
-
-	MAINNETChainID     = "NetXdQprcVkpaWU"
-	HANGZHOUNETChainID = "NetXZSsxBpMQeAT"
+	DefaultAccountIndex = 0
+	MAINNETChainID      = "NetXdQprcVkpaWU"
+	ITHACANETChainID    = "NetXnHfVqm9iesp"
 )
 
+var (
+	ErrWrongChainID   = errors.New("Connected node serve different chain from setting")
+	ErrInvalidRpcNode = errors.New("Invalid rpc node")
+)
+
+func buildDerivePath(index uint) string {
+	return fmt.Sprintf("m/44'/1729'/%d'/0'", index)
+}
+
 type Wallet struct {
-	chainID    string
-	privateKey tezos.PrivateKey
-	rpcClient  *rpc.Client
+	chainID      string
+	masterKey    ed25519hd.PrivateKey
+	privateKey   tezos.PrivateKey
+	accountIndex uint
+	rpcClient    *rpc.Client
 }
 
 // NewWallet creates a tezos wallet from a given seed
 func NewWallet(seed []byte, network string, rpcURL string) (*Wallet, error) {
-	key := tezos.PrivateKey{
-		Type: tezos.KeyTypeSecp256k1,
-	}
-	wallet, err := hdwallet.NewFromSeed(seed)
+	pk, err := ed25519hd.GetMasterKeyFromSeed(seed)
 	if err != nil {
 		return nil, err
 	}
 
-	chainID := HANGZHOUNETChainID
+	dpk, _ := pk.DeriveChildPrivateKey(buildDerivePath(DefaultAccountIndex))
+	key := toTzgoPrivateKey(*dpk)
+
+	c, _ := rpc.NewClient(rpcURL, nil)
+	err = c.Init(context.Background())
+	if err != nil {
+		return nil, ErrInvalidRpcNode
+	}
+
+	chainID := ITHACANETChainID
 	if network == "livenet" {
 		chainID = MAINNETChainID
 	}
-
-	path := hdwallet.MustParseDerivationPath(DefaultDerivationPath)
-	account, err := wallet.Derive(path, false)
-	if err != nil {
-		return nil, err
-	}
-
-	pk, err := wallet.PrivateKey(account)
-	if err != nil {
-		return nil, err
-	}
-	key.Data = make([]byte, tezos.KeyTypeSecp256k1.SkHashType().Len())
-	pk.D.FillBytes(key.Data)
-	c, err := rpc.NewClient(rpcURL, nil)
-	if err != nil {
-		return nil, err
+	cChainID, _ := tezos.ParseChainIdHash(chainID)
+	if !c.ChainId.Equal(cChainID) {
+		return nil, ErrWrongChainID
 	}
 
 	return &Wallet{
-		chainID:    chainID,
-		privateKey: key,
-		rpcClient:  c,
+		chainID:      chainID,
+		masterKey:    *pk,
+		privateKey:   key,
+		accountIndex: DefaultAccountIndex,
+		rpcClient:    c,
+	}, nil
+}
+
+// DeriveAccount derive the specific index account from the master key
+func (w *Wallet) DeriveAccount(index uint) (*Wallet, error) {
+	dpk, err := w.masterKey.DeriveChildPrivateKey(buildDerivePath(index))
+	if err != nil {
+		return nil, err
+	}
+	key := toTzgoPrivateKey(*dpk)
+	return &Wallet{
+		chainID:      w.chainID,
+		masterKey:    w.masterKey,
+		privateKey:   key,
+		accountIndex: index,
+		rpcClient:    w.rpcClient,
 	}, nil
 }
 
@@ -71,4 +97,13 @@ func (w *Wallet) Account() string {
 // ChainID returns the tezos wallet ChainID
 func (w *Wallet) ChainID() string {
 	return w.chainID
+}
+
+// convert an ed25519 hd private key to tzgo private key
+func toTzgoPrivateKey(edk ed25519hd.PrivateKey) tezos.PrivateKey {
+	key := tezos.PrivateKey{
+		Type: tezos.KeyTypeEd25519,
+	}
+	key.Data = append(edk.Key, edk.GetPublicKey()...)
+	return key
 }
