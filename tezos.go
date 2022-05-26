@@ -4,12 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/big"
-	"time"
 
 	ed25519hd "github.com/bitmark-inc/go-ed25519-hd"
 
-	"blockwatch.cc/tzgo/micheline"
+	"blockwatch.cc/tzgo/codec"
+	"blockwatch.cc/tzgo/contract"
 	"blockwatch.cc/tzgo/rpc"
 	"blockwatch.cc/tzgo/tezos"
 )
@@ -21,11 +20,13 @@ const (
 )
 
 var (
-	ErrWrongChainID   = errors.New("Connected node serve different chain from setting")
-	ErrInvalidRpcNode = errors.New("Invalid rpc node")
-	ErrSignFailed     = errors.New("Failed to sign with provided data")
-	ErrInvalidAddress = errors.New("Invalid address provided")
-	ErrInvalidTokenID = errors.New("Invalid tokenID provided")
+	ErrWrongChainID     = errors.New("Connected node serve different chain from setting")
+	ErrInvalidRpcNode   = errors.New("Invalid rpc node")
+	ErrSignFailed       = errors.New("Failed to sign with provided data")
+	ErrInvalidAddress   = errors.New("Invalid address provided")
+	ErrInvalidPublicKey = errors.New("Invalid public key provided")
+	ErrInvalidSignature = errors.New("Invalid signature provided")
+	ErrInvalidTokenID   = errors.New("Invalid tokenID provided")
 )
 
 func buildDerivePath(index uint) string {
@@ -100,13 +101,27 @@ func (w *Wallet) SignMessage(message []byte) (string, error) {
 	return sig.Generic(), nil
 }
 
-// SignAuthTransferMessage sign the authorized transfer message from privateKey
-func (w *Wallet) SignAuthTransferMessage(to, tokenID string) (string, error) {
-	m, err := BuildAuthTransferMessage(to, tokenID)
-	if err != nil {
-		return "", err
+// Send will send a tx to tezos blockchain and listen to confirmation
+func (w *Wallet) Send(args contract.CallArguments) (*rpc.Receipt, error) {
+	opts := &rpc.CallOptions{
+		Confirmations: 1,
+		TTL:           tezos.DefaultParams.MaxOperationsTTL - 2,
+		MaxFee:        1_000_000,
+		Observer:      rpc.NewObserver(),
 	}
-	return w.SignMessage(m)
+
+	opts.Observer.Listen(w.rpcClient)
+
+	op := codec.NewOp().WithTTL(opts.TTL)
+	op.WithContents(args.Encode())
+	op.WithParams(tezos.IthacanetParams)
+
+	rcpt, err := w.rpcClient.Send(context.Background(), op, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return rcpt, nil
 }
 
 // RPCClient returns the Tezos RPC client which is bound to the wallet
@@ -122,41 +137,6 @@ func (w *Wallet) Account() string {
 // ChainID returns the tezos wallet ChainID
 func (w *Wallet) ChainID() string {
 	return w.chainID
-}
-
-// BuildAuthTransferMessage build the authorized transfer message
-func BuildAuthTransferMessage(to, tokenID string) ([]byte, error) {
-	// timestamp
-	ts := big.NewInt(time.Now().Unix())
-
-	// address
-	ad, err := tezos.ParseAddress(to)
-	if err != nil {
-		return nil, ErrInvalidAddress
-	}
-
-	// token
-	n := new(big.Int)
-	tk, ok := n.SetString(tokenID, 10)
-	if !ok {
-		return nil, ErrInvalidTokenID
-	}
-
-	tsp := micheline.Prim{
-		Type: micheline.PrimInt,
-		Int:  ts,
-	}
-	adp := micheline.Prim{
-		Type:  micheline.PrimBytes,
-		Bytes: ad.Bytes22(),
-	}
-	tkp := micheline.Prim{
-		Type: micheline.PrimInt,
-		Int:  tk,
-	}
-
-	// return hex.EncodeToString(append(append(tsp.Pack(), adp.Pack()...), tkp.Pack()...)), nil
-	return append(append(tsp.Pack(), adp.Pack()...), tkp.Pack()...), nil
 }
 
 // convert an ed25519 hd private key to tzgo private key
