@@ -10,6 +10,7 @@ import (
 	"blockwatch.cc/tzgo/codec"
 	"blockwatch.cc/tzgo/contract"
 	"blockwatch.cc/tzgo/rpc"
+	"blockwatch.cc/tzgo/signer"
 	"blockwatch.cc/tzgo/tezos"
 )
 
@@ -103,6 +104,8 @@ func (w *Wallet) SignMessage(message []byte) (string, error) {
 
 // Send will send a tx to tezos blockchain and listen to confirmation
 func (w *Wallet) Send(args contract.CallArguments) (*rpc.Receipt, error) {
+	w.rpcClient.Signer = signer.NewFromKey(w.privateKey)
+
 	opts := &rpc.CallOptions{
 		Confirmations: 1,
 		TTL:           tezos.DefaultParams.MaxOperationsTTL - 2,
@@ -114,7 +117,12 @@ func (w *Wallet) Send(args contract.CallArguments) (*rpc.Receipt, error) {
 
 	op := codec.NewOp().WithTTL(opts.TTL)
 	op.WithContents(args.Encode())
-	op.WithParams(tezos.IthacanetParams)
+
+	if w.chainID == ITHACANETChainID {
+		op.WithParams(tezos.IthacanetParams)
+	} else {
+		op.WithParams(tezos.DefaultParams)
+	}
 
 	rcpt, err := w.rpcClient.Send(context.Background(), op, opts)
 	if err != nil {
@@ -129,7 +137,7 @@ func (w *Wallet) RPCClient() *rpc.Client {
 	return w.rpcClient
 }
 
-// Account returns the tezos account address
+// Account returns the tezos account address string
 func (w *Wallet) Account() string {
 	return w.privateKey.Address().String()
 }
