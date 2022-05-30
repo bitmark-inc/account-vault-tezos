@@ -1,4 +1,4 @@
-package tezos
+package feralfilev1
 
 import (
 	"encoding/hex"
@@ -7,7 +7,9 @@ import (
 	"blockwatch.cc/tzgo/contract"
 	"blockwatch.cc/tzgo/micheline"
 	"blockwatch.cc/tzgo/rpc"
-	"blockwatch.cc/tzgo/tezos"
+	tz "blockwatch.cc/tzgo/tezos"
+
+	tezos "github.com/bitmark-inc/account-vault-tezos"
 )
 
 type MintEditionParam struct {
@@ -17,7 +19,7 @@ type MintEditionParam struct {
 
 func (m MintEditionParam) Build() (*mintEditionParam, error) {
 	// address
-	ow, err := tezos.ParseAddress(m.Owner)
+	ow, err := tz.ParseAddress(m.Owner)
 	if err != nil {
 		return nil, ErrInvalidAddress
 	}
@@ -55,7 +57,7 @@ func (m MintEditionToken) Build() (*mintEditionToken, error) {
 }
 
 type mintEditionParam struct {
-	Owner  tezos.Address
+	Owner  tz.Address
 	Tokens []mintEditionToken
 }
 
@@ -107,14 +109,8 @@ func (p mintEditionArgs) Prim() micheline.Prim {
 	return rs
 }
 
-// MintEditions mint edition tokens for artworks
-func (w *Wallet) MintEditions(contr string, mes []MintEditionParam) (*rpc.Receipt, error) {
-	ca, err := tezos.ParseAddress(contr)
-	if err != nil {
-		return nil, ErrInvalidAddress
-	}
-	con := contract.NewContract(ca, w.rpcClient)
-
+// mintEditions mint edition tokens for artworks
+func mintEditions(w *tezos.Wallet, con *contract.Contract, mes []MintEditionParam) (*rpc.Receipt, error) {
 	var mes_ []mintEditionParam
 	for _, me := range mes {
 		me_, err := me.Build()

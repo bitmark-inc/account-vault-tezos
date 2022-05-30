@@ -1,4 +1,4 @@
-package tezos
+package feralfilev1
 
 import (
 	"math/big"
@@ -6,7 +6,8 @@ import (
 	"blockwatch.cc/tzgo/contract"
 	"blockwatch.cc/tzgo/micheline"
 	"blockwatch.cc/tzgo/rpc"
-	"blockwatch.cc/tzgo/tezos"
+
+	tezos "github.com/bitmark-inc/account-vault-tezos"
 )
 
 type RegisterArtworkParam struct {
@@ -58,14 +59,8 @@ func (p registerArtworkArgs) Prim() micheline.Prim {
 	return rs
 }
 
-// RegisterArtworks register new artworks
-func (w *Wallet) RegisterArtworks(contr string, ras []RegisterArtworkParam) (*rpc.Receipt, error) {
-	ca, err := tezos.ParseAddress(contr)
-	if err != nil {
-		return nil, ErrInvalidAddress
-	}
-	con := contract.NewContract(ca, w.rpcClient)
-
+// registerArtworks register new artworks
+func registerArtworks(w *tezos.Wallet, con *contract.Contract, ras []RegisterArtworkParam) (*rpc.Receipt, error) {
 	var ras_ []registerArtworkParam
 	for _, ra := range ras {
 		ra_, err := ra.Build()

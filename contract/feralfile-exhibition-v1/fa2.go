@@ -1,11 +1,19 @@
-package tezos
+package feralfilev1
 
 import (
 	"math/big"
 
 	"blockwatch.cc/tzgo/contract"
 	"blockwatch.cc/tzgo/rpc"
-	"blockwatch.cc/tzgo/tezos"
+	tz "blockwatch.cc/tzgo/tezos"
+
+	tezos "github.com/bitmark-inc/account-vault-tezos"
+)
+
+const (
+	DefaultAccountIndex = 0
+	MAINNETChainID      = "NetXdQprcVkpaWU"
+	ITHACANETChainID    = "NetXnHfVqm9iesp"
 )
 
 type TransferParam struct {
@@ -15,7 +23,7 @@ type TransferParam struct {
 
 func (t TransferParam) Build() (*transferParam, error) {
 	// address
-	to_, err := tezos.ParseAddress(t.To)
+	to_, err := tz.ParseAddress(t.To)
 	if err != nil {
 		return nil, ErrInvalidAddress
 	}
@@ -31,19 +39,16 @@ func (t TransferParam) Build() (*transferParam, error) {
 }
 
 type transferParam struct {
-	To      tezos.Address
+	To      tz.Address
 	TokenID *big.Int
 }
 
-// Transfer transfer a FA2 token
-func (w *Wallet) Transfer(contr string, tp TransferParam) (*rpc.Receipt, error) {
-	ca, err := tezos.ParseAddress(contr)
-	if err != nil {
-		return nil, ErrInvalidAddress
-	}
-	// construct a new contract
-	con := contract.NewContract(ca, w.rpcClient)
+// transfer transfer a FA2 token
+func transfer(w *tezos.Wallet, con *contract.Contract, tp TransferParam) (*rpc.Receipt, error) {
 	tp_, err := tp.Build()
+	if err != nil {
+		return nil, err
+	}
 
 	// construct an FA2 token
 	token := con.AsFA2(0)
@@ -51,9 +56,9 @@ func (w *Wallet) Transfer(contr string, tp TransferParam) (*rpc.Receipt, error) 
 
 	// construct simple transfer arguments
 	args := token.Transfer(
-		w.privateKey.Address(), // from
-		tp_.To,                 // to
-		tezos.NewZ(1),          // amount
+		w.PrivateKey().Address(), // from
+		tp_.To,                   // to
+		tz.NewZ(1),               // amount
 	)
 	args.WithDestination(con.Address())
 

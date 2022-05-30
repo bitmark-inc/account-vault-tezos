@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/big"
+	"time"
 
 	ed25519hd "github.com/bitmark-inc/go-ed25519-hd"
 
 	"blockwatch.cc/tzgo/codec"
 	"blockwatch.cc/tzgo/contract"
+	"blockwatch.cc/tzgo/micheline"
 	"blockwatch.cc/tzgo/rpc"
 	"blockwatch.cc/tzgo/signer"
 	"blockwatch.cc/tzgo/tezos"
@@ -102,6 +105,43 @@ func (w *Wallet) SignMessage(message []byte) (string, error) {
 	return sig.Generic(), nil
 }
 
+// SignAuthTransferMessage sign the authorized transfer message from privateKey
+func (w *Wallet) SignAuthTransferMessage(to, tokenID string, timestamp time.Time) (string, error) {
+	// timestamp
+	ts := big.NewInt(timestamp.Unix())
+
+	// address
+	ad, err := tezos.ParseAddress(to)
+	if err != nil {
+		return "", ErrInvalidAddress
+	}
+
+	// token
+	tk, ok := new(big.Int).SetString(tokenID, 10)
+	if !ok {
+		return "", ErrInvalidTokenID
+	}
+
+	tsp := micheline.Prim{
+		Type: micheline.PrimInt,
+		Int:  ts,
+	}
+	adp := micheline.Prim{
+		Type:  micheline.PrimBytes,
+		Bytes: ad.Bytes22(),
+	}
+	tkp := micheline.Prim{
+		Type: micheline.PrimInt,
+		Int:  tk,
+	}
+
+	m := append(append(tsp.Pack(), adp.Pack()...), tkp.Pack()...)
+	if err != nil {
+		return "", err
+	}
+	return w.SignMessage(m)
+}
+
 // Send will send a tx to tezos blockchain and listen to confirmation
 func (w *Wallet) Send(args contract.CallArguments) (*rpc.Receipt, error) {
 	w.rpcClient.Signer = signer.NewFromKey(w.privateKey)
@@ -145,6 +185,11 @@ func (w *Wallet) Account() string {
 // ChainID returns the tezos wallet ChainID
 func (w *Wallet) ChainID() string {
 	return w.chainID
+}
+
+// Account returns the private key
+func (w *Wallet) PrivateKey() tezos.PrivateKey {
+	return w.privateKey
 }
 
 // convert an ed25519 hd private key to tzgo private key

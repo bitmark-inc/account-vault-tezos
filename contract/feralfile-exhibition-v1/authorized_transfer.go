@@ -1,4 +1,4 @@
-package tezos
+package feralfilev1
 
 import (
 	"math/big"
@@ -7,46 +7,10 @@ import (
 	"blockwatch.cc/tzgo/contract"
 	"blockwatch.cc/tzgo/micheline"
 	"blockwatch.cc/tzgo/rpc"
-	"blockwatch.cc/tzgo/tezos"
+	tz "blockwatch.cc/tzgo/tezos"
+
+	tezos "github.com/bitmark-inc/account-vault-tezos"
 )
-
-type AuthTransferMessageParam struct {
-	To        string
-	TokenID   string
-	Timestamp time.Time
-}
-
-func (a AuthTransferMessageParam) Build() ([]byte, error) {
-	// timestamp
-	ts := big.NewInt(a.Timestamp.Unix())
-
-	// address
-	ad, err := tezos.ParseAddress(a.To)
-	if err != nil {
-		return nil, ErrInvalidAddress
-	}
-
-	// token
-	tk, ok := new(big.Int).SetString(a.TokenID, 10)
-	if !ok {
-		return nil, ErrInvalidTokenID
-	}
-
-	tsp := micheline.Prim{
-		Type: micheline.PrimInt,
-		Int:  ts,
-	}
-	adp := micheline.Prim{
-		Type:  micheline.PrimBytes,
-		Bytes: ad.Bytes22(),
-	}
-	tkp := micheline.Prim{
-		Type: micheline.PrimInt,
-		Int:  tk,
-	}
-
-	return append(append(tsp.Pack(), adp.Pack()...), tkp.Pack()...), nil
-}
 
 type AuthTransferParam struct {
 	From      string
@@ -56,11 +20,11 @@ type AuthTransferParam struct {
 }
 
 func (a AuthTransferParam) Build() (*authTransferParam, error) {
-	from_, err := tezos.ParseAddress(a.From)
+	from_, err := tz.ParseAddress(a.From)
 	if err != nil {
 		return nil, ErrInvalidAddress
 	}
-	pk_, err := tezos.ParseKey(a.PK)
+	pk_, err := tz.ParseKey(a.PK)
 	if err != nil {
 		return nil, ErrInvalidPublicKey
 	}
@@ -87,7 +51,7 @@ type AuthTransaction struct {
 }
 
 func (a AuthTransaction) Build() (*authTransaction, error) {
-	sig_, err := tezos.ParseSignature(a.Signature)
+	sig_, err := tz.ParseSignature(a.Signature)
 	if err != nil {
 		return nil, ErrInvalidSignature
 	}
@@ -95,7 +59,7 @@ func (a AuthTransaction) Build() (*authTransaction, error) {
 	if !ok {
 		return nil, ErrInvalidTokenID
 	}
-	to_, err := tezos.ParseAddress(a.To)
+	to_, err := tz.ParseAddress(a.To)
 	if err != nil {
 		return nil, ErrInvalidAddress
 	}
@@ -108,15 +72,15 @@ func (a AuthTransaction) Build() (*authTransaction, error) {
 }
 
 type authTransferParam struct {
-	From      tezos.Address
-	PK        tezos.Key
+	From      tz.Address
+	PK        tz.Key
 	Timestamp *big.Int
 	Txs       []authTransaction
 }
 
 type authTransaction struct {
-	To        tezos.Address
-	Signature tezos.Signature
+	To        tz.Address
+	Signature tz.Signature
 	Amount    *big.Int
 	TokenID   *big.Int
 }
@@ -167,23 +131,8 @@ func (p authTransferArgs) Prim() micheline.Prim {
 	return rs
 }
 
-// SignAuthTransferMessage sign the authorized transfer message from privateKey
-func (w *Wallet) SignAuthTransferMessage(am AuthTransferMessageParam) (string, error) {
-	m, err := am.Build()
-	if err != nil {
-		return "", err
-	}
-	return w.SignMessage(m)
-}
-
-// AuthTransfer call the authorized transfer entrypoint define in FeralFile contract
-func (w *Wallet) AuthTransfer(contr string, aps []AuthTransferParam) (*rpc.Receipt, error) {
-	ca, err := tezos.ParseAddress(contr)
-	if err != nil {
-		return nil, ErrInvalidAddress
-	}
-	con := contract.NewContract(ca, w.rpcClient)
-
+// authTransfers call the authorized transfer entrypoint define in FeralFile contract
+func authTransfers(w *tezos.Wallet, con *contract.Contract, aps []AuthTransferParam) (*rpc.Receipt, error) {
 	var aps_ []authTransferParam
 	for _, ap := range aps {
 		ap_, err := ap.Build()
@@ -198,7 +147,7 @@ func (w *Wallet) AuthTransfer(contr string, aps []AuthTransferParam) (*rpc.Recei
 	}
 
 	args.Params = micheline.Parameters{
-		Entrypoint: "authorized_transfer",
+		Entrypoint: "authorized_transfers",
 		Value:      args.Prim(),
 	}
 	args.WithDestination(con.Address())
