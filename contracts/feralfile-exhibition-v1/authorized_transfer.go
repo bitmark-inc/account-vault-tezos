@@ -13,10 +13,10 @@ import (
 )
 
 type AuthTransferParam struct {
-	From      string
-	PK        string
-	Timestamp time.Time
-	Txs       []AuthTransaction
+	From      string            `json:"from"`
+	PK        string            `json:"pk"`
+	Timestamp time.Time         `json:"timestamp"`
+	Txs       []AuthTransaction `json:"txs"`
 }
 
 func (a AuthTransferParam) Build() (*authTransferParam, error) {
@@ -45,9 +45,9 @@ func (a AuthTransferParam) Build() (*authTransferParam, error) {
 }
 
 type AuthTransaction struct {
-	To        string
-	Signature string
-	TokenID   string
+	To        string `json:"to"`
+	Signature string `json:"signature"`
+	TokenID   string `json:"token_id"`
 }
 
 func (a AuthTransaction) Build() (*authTransaction, error) {

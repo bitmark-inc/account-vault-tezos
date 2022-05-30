@@ -147,7 +147,7 @@ func (w *Wallet) Send(args contract.CallArguments) (*rpc.Receipt, error) {
 	w.rpcClient.Signer = signer.NewFromKey(w.privateKey)
 
 	opts := &rpc.CallOptions{
-		Confirmations: 1,
+		Confirmations: 0,
 		TTL:           tezos.DefaultParams.MaxOperationsTTL - 2,
 		MaxFee:        1_000_000,
 		Observer:      rpc.NewObserver(),

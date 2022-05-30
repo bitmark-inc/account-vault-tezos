@@ -17,8 +17,8 @@ const (
 )
 
 type TransferParam struct {
-	To      string
-	TokenID string
+	To      string `json:"to"`
+	TokenID string `json:"token_id"`
 }
 
 func (t TransferParam) Build() (*transferParam, error) {

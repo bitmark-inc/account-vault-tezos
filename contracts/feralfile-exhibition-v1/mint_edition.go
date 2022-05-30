@@ -13,8 +13,8 @@ import (
 )
 
 type MintEditionParam struct {
-	Owner  string
-	Tokens []MintEditionToken
+	Owner  string             `json:"owner"`
+	Tokens []MintEditionToken `json:"tokens"`
 }
 
 func (m MintEditionParam) Build() (*mintEditionParam, error) {
@@ -38,9 +38,9 @@ func (m MintEditionParam) Build() (*mintEditionParam, error) {
 }
 
 type MintEditionToken struct {
-	IPFSLink  string
-	ArtworkID string
-	Edition   int64
+	IPFSLink  string `json:"ipfs_link"`
+	ArtworkID string `json:"artwork_id"`
+	Edition   int64  `json:"edition"`
 }
 
 func (m MintEditionToken) Build() (*mintEditionToken, error) {

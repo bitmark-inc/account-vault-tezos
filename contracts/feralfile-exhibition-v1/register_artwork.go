@@ -11,10 +11,10 @@ import (
 )
 
 type RegisterArtworkParam struct {
-	ArtistName  string
-	Fingerprint string
-	Title       string
-	MaxEdition  int64
+	ArtistName  string `json:"artist_name"`
+	Fingerprint string `json:"fingerprint"`
+	Title       string `json:"title"`
+	MaxEdition  int64  `json:"max_edition"`
 }
 
 func (ra RegisterArtworkParam) Build() (*registerArtworkParam, error) {
