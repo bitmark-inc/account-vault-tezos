@@ -110,7 +110,7 @@ func (w *Wallet) signMessage(message []byte) (string, error) {
 	if err != nil {
 		return "", ErrSignFailed
 	}
-	return sig.String(), nil
+	return sig.Generic(), nil
 }
 
 // SignAuthTransferMessage sign the authorized transfer message from privateKey
