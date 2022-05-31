@@ -50,7 +50,7 @@ func transfer(w *tezos.Wallet, con *contract.Contract, tp TransferParam) (*rpc.R
 		return nil, err
 	}
 
-	// construct an FA2 token
+	// construct a FA2 token
 	token := con.AsFA2(0)
 	token.TokenId.Set(tp_.TokenID)
 

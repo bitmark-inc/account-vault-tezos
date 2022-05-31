@@ -21,6 +21,7 @@ const (
 	DefaultAccountIndex = 0
 	MAINNETChainID      = "NetXdQprcVkpaWU"
 	ITHACANETChainID    = "NetXnHfVqm9iesp"
+	DefaultSignPrefix   = "Tezos Signed Message:"
 )
 
 var (
@@ -95,14 +96,21 @@ func (w *Wallet) DeriveAccount(index uint) (*Wallet, error) {
 	}, nil
 }
 
-// SignMessage sign a specific message from privateKey
-func (w *Wallet) SignMessage(message []byte) (string, error) {
-	dm := tezos.Digest(message)
+// signMessage sign a specific message from privateKey
+func (w *Wallet) signMessage(message []byte) (string, error) {
+	// force add prefix to message to prevent possible attack
+	m := append([]byte(DefaultSignPrefix), message...)
+	// pack the message to tezos bytes
+	mp := micheline.Prim{
+		Type:  micheline.PrimBytes,
+		Bytes: m,
+	}
+	dm := tezos.Digest(mp.Pack())
 	sig, err := w.privateKey.Sign(dm[:])
 	if err != nil {
 		return "", ErrSignFailed
 	}
-	return sig.Generic(), nil
+	return sig.String(), nil
 }
 
 // SignAuthTransferMessage sign the authorized transfer message from privateKey
@@ -136,10 +144,7 @@ func (w *Wallet) SignAuthTransferMessage(to, tokenID string, timestamp time.Time
 	}
 
 	m := append(append(tsp.Pack(), adp.Pack()...), tkp.Pack()...)
-	if err != nil {
-		return "", err
-	}
-	return w.SignMessage(m)
+	return w.signMessage(m)
 }
 
 // Send will send a tx to tezos blockchain and listen to confirmation
