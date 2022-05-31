@@ -20,7 +20,7 @@ type RegisterArtworkParam struct {
 func (ra RegisterArtworkParam) Build() (*registerArtworkParam, error) {
 	return &registerArtworkParam{
 		ArtistName:  ra.ArtistName,
-		Fingerprint: ra.Fingerprint,
+		Fingerprint: []byte(ra.Fingerprint),
 		Title:       ra.Title,
 		MaxEdition:  big.NewInt(ra.MaxEdition),
 	}, nil
@@ -28,7 +28,7 @@ func (ra RegisterArtworkParam) Build() (*registerArtworkParam, error) {
 
 type registerArtworkParam struct {
 	ArtistName  string
-	Fingerprint string
+	Fingerprint []byte
 	Title       string
 	MaxEdition  *big.Int
 }
@@ -49,7 +49,7 @@ func (p registerArtworkArgs) Prim() micheline.Prim {
 				micheline.NewPair(
 					micheline.NewString(v.ArtistName),
 					micheline.NewPair(
-						micheline.NewString(v.Fingerprint),
+						micheline.NewBytes(v.Fingerprint),
 						micheline.NewBig(v.MaxEdition),
 					),
 				),

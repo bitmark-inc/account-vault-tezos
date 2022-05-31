@@ -13,10 +13,10 @@ import (
 )
 
 type AuthTransferParam struct {
-	From      string            `json:"from"`
-	PK        string            `json:"pk"`
-	Timestamp time.Time         `json:"timestamp"`
-	Txs       []AuthTransaction `json:"txs"`
+	From   string            `json:"from"`
+	PK     string            `json:"pk"`
+	Expiry time.Time         `json:"expiry"`
+	Txs    []AuthTransaction `json:"txs"`
 }
 
 func (a AuthTransferParam) Build() (*authTransferParam, error) {
@@ -37,10 +37,10 @@ func (a AuthTransferParam) Build() (*authTransferParam, error) {
 		txs = append(txs, *x)
 	}
 	return &authTransferParam{
-		From:      from_,
-		PK:        pk_,
-		Timestamp: big.NewInt(a.Timestamp.Unix()),
-		Txs:       txs,
+		From:   from_,
+		PK:     pk_,
+		Expiry: big.NewInt(a.Expiry.Unix()),
+		Txs:    txs,
 	}, nil
 }
 
@@ -72,10 +72,10 @@ func (a AuthTransaction) Build() (*authTransaction, error) {
 }
 
 type authTransferParam struct {
-	From      tz.Address
-	PK        tz.Key
-	Timestamp *big.Int
-	Txs       []authTransaction
+	From   tz.Address
+	PK     tz.Key
+	Expiry *big.Int
+	Txs    []authTransaction
 }
 
 type authTransaction struct {
@@ -120,7 +120,7 @@ func (p authTransferArgs) Prim() micheline.Prim {
 				micheline.NewPair(
 					micheline.NewBytes(v.PK.Bytes()),
 					micheline.NewPair(
-						micheline.NewBig(v.Timestamp),
+						micheline.NewBig(v.Expiry),
 						micheline.NewSeq(),
 					),
 				),

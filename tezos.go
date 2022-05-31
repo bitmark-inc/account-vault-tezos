@@ -29,6 +29,7 @@ var (
 	ErrInvalidRpcNode   = errors.New("Invalid rpc node")
 	ErrSignFailed       = errors.New("Failed to sign with provided data")
 	ErrInvalidAddress   = errors.New("Invalid address provided")
+	ErrInvalidTimestamp = errors.New("Invalid timestamp provided")
 	ErrInvalidPublicKey = errors.New("Invalid public key provided")
 	ErrInvalidSignature = errors.New("Invalid signature provided")
 	ErrInvalidTokenID   = errors.New("Invalid tokenID provided")
@@ -114,9 +115,9 @@ func (w *Wallet) signMessage(message []byte) (string, error) {
 }
 
 // SignAuthTransferMessage sign the authorized transfer message from privateKey
-func (w *Wallet) SignAuthTransferMessage(to, tokenID string, timestamp time.Time) (string, error) {
+func (w *Wallet) SignAuthTransferMessage(to, tokenID string, expiry time.Time) (string, error) {
 	// timestamp
-	ts := big.NewInt(timestamp.Unix())
+	ts := big.NewInt(expiry.Unix())
 
 	// address
 	ad, err := tezos.ParseAddress(to)
