@@ -5,10 +5,12 @@ go 1.18
 require (
 	blockwatch.cc/tzgo v1.12.3
 	github.com/bitmark-inc/go-ed25519-hd v0.0.0-20220525024501-4e0cd259ca98
+	github.com/ethereum/go-ethereum v1.10.8
 	github.com/stretchr/testify v1.7.1
 )
 
 require (
+	github.com/btcsuite/btcd v0.20.1-beta // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1 v1.0.3 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v2 v2.0.0 // indirect
@@ -19,5 +21,5 @@ require (
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
 	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

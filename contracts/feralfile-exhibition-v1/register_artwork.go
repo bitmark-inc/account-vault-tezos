@@ -6,6 +6,7 @@ import (
 	"blockwatch.cc/tzgo/contract"
 	"blockwatch.cc/tzgo/micheline"
 	"blockwatch.cc/tzgo/rpc"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 
 	tezos "github.com/bitmark-inc/account-vault-tezos"
 )
@@ -18,9 +19,13 @@ type RegisterArtworkParam struct {
 }
 
 func (ra RegisterArtworkParam) Build() (*registerArtworkParam, error) {
+	pfp, err := getPackedFingerprint(ra.Fingerprint)
+	if err != nil {
+		return nil, err
+	}
 	return &registerArtworkParam{
 		ArtistName:  ra.ArtistName,
-		Fingerprint: []byte(ra.Fingerprint),
+		Fingerprint: pfp,
 		Title:       ra.Title,
 		MaxEdition:  big.NewInt(ra.MaxEdition),
 	}, nil
@@ -81,4 +86,26 @@ func registerArtworks(w *tezos.Wallet, con *contract.Contract, ras []RegisterArt
 	args.WithDestination(con.Address())
 
 	return w.Send(&args)
+}
+
+// getPackedFingerprint returns the packed fingerprint. The value
+// would be identical to the one generated from the ethereum solidity abi.encode.
+// In this way we could keep the packed artwork fingerprint same as ethereum on tezos
+func getPackedFingerprint(fingerprint string) ([]byte, error) {
+	stringTy, err := abi.NewType("string", "", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	args := abi.Arguments{
+		{
+			Type: stringTy,
+		},
+	}
+
+	bytes, err := args.Pack(fingerprint)
+	if err != nil {
+		return nil, err
+	}
+	return bytes, nil
 }
