@@ -155,7 +155,7 @@ func (w *Wallet) Send(args contract.CallArguments) (*rpc.Receipt, error) {
 	opts := &rpc.CallOptions{
 		Confirmations: 0,
 		TTL:           tezos.DefaultParams.MaxOperationsTTL - 2,
-		MaxFee:        1_000_000,
+		MaxFee:        1_000_000_0,
 		Observer:      rpc.NewObserver(),
 	}
 
