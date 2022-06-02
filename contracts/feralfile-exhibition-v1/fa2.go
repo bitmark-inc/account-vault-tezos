@@ -4,7 +4,6 @@ import (
 	"math/big"
 
 	"blockwatch.cc/tzgo/contract"
-	"blockwatch.cc/tzgo/rpc"
 	tz "blockwatch.cc/tzgo/tezos"
 
 	tezos "github.com/bitmark-inc/account-vault-tezos"
@@ -44,7 +43,7 @@ type transferParam struct {
 }
 
 // transfer transfer a FA2 token
-func transfer(w *tezos.Wallet, con *contract.Contract, tp TransferParam) (*rpc.Receipt, error) {
+func transfer(w *tezos.Wallet, con *contract.Contract, tp TransferParam) (*string, error) {
 	tp_, err := tp.Build()
 	if err != nil {
 		return nil, err

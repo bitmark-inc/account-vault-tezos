@@ -6,7 +6,6 @@ import (
 
 	"blockwatch.cc/tzgo/contract"
 	"blockwatch.cc/tzgo/micheline"
-	"blockwatch.cc/tzgo/rpc"
 	tz "blockwatch.cc/tzgo/tezos"
 
 	tezos "github.com/bitmark-inc/account-vault-tezos"
@@ -132,7 +131,7 @@ func (p authTransferArgs) Prim() micheline.Prim {
 }
 
 // authTransfers call the authorized transfer entrypoint define in FeralFile contract
-func authTransfers(w *tezos.Wallet, con *contract.Contract, aps []AuthTransferParam) (*rpc.Receipt, error) {
+func authTransfers(w *tezos.Wallet, con *contract.Contract, aps []AuthTransferParam) (*string, error) {
 	var aps_ []authTransferParam
 	for _, ap := range aps {
 		ap_, err := ap.Build()

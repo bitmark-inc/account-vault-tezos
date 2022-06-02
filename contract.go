@@ -3,14 +3,12 @@ package tezos
 import (
 	"encoding/json"
 	"fmt"
-
-	"blockwatch.cc/tzgo/rpc"
 )
 
 // Contract is an interface defines how a vault interact with the smart contract
 type Contract interface {
 	Deploy(wallet *Wallet, arguments json.RawMessage) (address string, txID string, err error)
-	Call(wallet *Wallet, method string, arguments json.RawMessage) (tx *rpc.Receipt, err error)
+	Call(wallet *Wallet, method string, arguments json.RawMessage) (tx *string, err error)
 }
 
 // ContractFactory is a function that takes an address and return a Contract instance

@@ -5,7 +5,6 @@ import (
 
 	"blockwatch.cc/tzgo/contract"
 	"blockwatch.cc/tzgo/micheline"
-	"blockwatch.cc/tzgo/rpc"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 
 	tezos "github.com/bitmark-inc/account-vault-tezos"
@@ -65,7 +64,7 @@ func (p registerArtworkArgs) Prim() micheline.Prim {
 }
 
 // registerArtworks register new artworks
-func registerArtworks(w *tezos.Wallet, con *contract.Contract, ras []RegisterArtworkParam) (*rpc.Receipt, error) {
+func registerArtworks(w *tezos.Wallet, con *contract.Contract, ras []RegisterArtworkParam) (*string, error) {
 	var ras_ []registerArtworkParam
 	for _, ra := range ras {
 		ra_, err := ra.Build()

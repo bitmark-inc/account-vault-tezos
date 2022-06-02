@@ -6,7 +6,6 @@ import (
 
 	"blockwatch.cc/tzgo/contract"
 	"blockwatch.cc/tzgo/micheline"
-	"blockwatch.cc/tzgo/rpc"
 	tz "blockwatch.cc/tzgo/tezos"
 
 	tezos "github.com/bitmark-inc/account-vault-tezos"
@@ -110,7 +109,7 @@ func (p mintEditionArgs) Prim() micheline.Prim {
 }
 
 // mintEditions mint edition tokens for artworks
-func mintEditions(w *tezos.Wallet, con *contract.Contract, mes []MintEditionParam) (*rpc.Receipt, error) {
+func mintEditions(w *tezos.Wallet, con *contract.Contract, mes []MintEditionParam) (*string, error) {
 	var mes_ []mintEditionParam
 	for _, me := range mes {
 		me_, err := me.Build()

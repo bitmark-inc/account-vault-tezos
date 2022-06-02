@@ -148,18 +148,14 @@ func (w *Wallet) SignAuthTransferMessage(to, tokenID string, expiry time.Time) (
 	return w.signMessage(m)
 }
 
-// Send will send a tx to tezos blockchain and listen to confirmation
-func (w *Wallet) Send(args contract.CallArguments) (*rpc.Receipt, error) {
+// Send will send a op to tezos blockchain and return hash
+func (w *Wallet) Send(args contract.CallArguments) (*string, error) {
 	w.rpcClient.Signer = signer.NewFromKey(w.privateKey)
 
 	opts := &rpc.CallOptions{
-		Confirmations: 0,
-		TTL:           tezos.DefaultParams.MaxOperationsTTL - 2,
-		MaxFee:        1_000_000_0,
-		Observer:      rpc.NewObserver(),
+		TTL:    tezos.DefaultParams.MaxOperationsTTL - 2,
+		MaxFee: 1_000_000_0,
 	}
-
-	opts.Observer.Listen(w.rpcClient)
 
 	op := codec.NewOp().WithTTL(opts.TTL)
 	op.WithContents(args.Encode())
@@ -170,12 +166,84 @@ func (w *Wallet) Send(args contract.CallArguments) (*rpc.Receipt, error) {
 		op.WithParams(tezos.DefaultParams)
 	}
 
-	rcpt, err := w.rpcClient.Send(context.Background(), op, opts)
+	return w.send(op, opts)
+}
+
+// send is a convenience wrapper for sending operations. It auto-completes gas and storage limit,
+// ensures minimum fees are set, protects against fee overpayment, signs and broadcasts the final
+// operation.
+func (w *Wallet) send(op *codec.Op, opts *rpc.CallOptions) (*string, error) {
+	ctx := context.Background()
+	if opts == nil {
+		opts = &rpc.DefaultOptions
+	}
+
+	signer := w.rpcClient.Signer
+	if opts.Signer != nil {
+		signer = opts.Signer
+	}
+
+	// identify the sender address for signing the message
+	addr := opts.Sender
+	if !addr.IsValid() {
+		addrs, err := signer.ListAddresses(ctx)
+		if err != nil {
+			return nil, err
+		}
+		addr = addrs[0]
+	}
+
+	key, err := signer.GetKey(ctx, addr)
 	if err != nil {
 		return nil, err
 	}
 
-	return rcpt, nil
+	// set source on all ops
+	op.WithSource(key.Address())
+
+	// auto-complete op with branch/ttl, source counter, reveal
+	err = w.rpcClient.Complete(ctx, op, key)
+	if err != nil {
+		return nil, err
+	}
+
+	// simulate to check tx validity and estimate cost
+	sim, err := w.rpcClient.Simulate(ctx, op, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	// fail with Tezos error when simulation failed
+	if !sim.IsSuccess() {
+		return nil, sim.Error()
+	}
+
+	// apply simulated cost as limits to tx list
+	if !opts.IgnoreLimits {
+		op.WithLimits(sim.MinLimits(), rpc.GasSafetyMargin)
+	}
+
+	// check minFee calc against maxFee if set
+	if opts.MaxFee > 0 {
+		if l := op.Limits(); l.Fee > opts.MaxFee {
+			return nil, fmt.Errorf("estimated cost %d > max %d", l.Fee, opts.MaxFee)
+		}
+	}
+
+	// sign digest
+	sig, err := signer.SignOperation(ctx, addr, op)
+	if err != nil {
+		return nil, err
+	}
+	op.WithSignature(sig)
+
+	// broadcast
+	hash, err := w.rpcClient.Broadcast(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+	h := hash.String()
+	return &h, nil
 }
 
 // RPCClient returns the Tezos RPC client which is bound to the wallet
