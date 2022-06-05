@@ -57,9 +57,15 @@ func NewWallet(seed []byte, network string, rpcURL string) (*Wallet, error) {
 	dpk, _ := pk.DeriveChildPrivateKey(buildDerivePath(DefaultAccountIndex))
 	key := toTzgoPrivateKey(*dpk)
 
-	c, _ := rpc.NewClient(rpcURL, nil)
-	err = c.Init(context.Background())
+	c, err := rpc.NewClient(rpcURL, nil)
 	if err != nil {
+		return nil, err
+	}
+
+	// Set default signer to wallet private key
+	c.Signer = signer.NewFromKey(key)
+
+	if err := c.Init(context.Background()); err != nil {
 		return nil, ErrInvalidRpcNode
 	}
 
@@ -150,11 +156,9 @@ func (w *Wallet) SignAuthTransferMessage(to, tokenID string, expiry time.Time) (
 
 // Send will send a op to tezos blockchain and return hash
 func (w *Wallet) Send(args contract.CallArguments) (*string, error) {
-	w.rpcClient.Signer = signer.NewFromKey(w.privateKey)
-
 	opts := &rpc.CallOptions{
 		TTL:    tezos.DefaultParams.MaxOperationsTTL - 2,
-		MaxFee: 1_000_000_0,
+		MaxFee: 10_000_000,
 	}
 
 	op := codec.NewOp().WithTTL(opts.TTL)
