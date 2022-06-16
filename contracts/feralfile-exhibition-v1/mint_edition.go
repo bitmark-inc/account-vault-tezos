@@ -131,7 +131,3 @@ func mintEditions(w *tezos.Wallet, con *contract.Contract, mes []MintEditionPara
 
 	return w.Send(&args)
 }
-
-func newElt(l, r micheline.Prim) micheline.Prim {
-	return micheline.Prim{Type: micheline.PrimBinary, OpCode: micheline.D_ELT, Args: []micheline.Prim{l, r}}
-}

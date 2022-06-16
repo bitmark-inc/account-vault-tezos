@@ -68,6 +68,12 @@ func (c *FeralfileExhibitionV1Contract) Call(wallet *tezos.Wallet, method string
 			return nil, err
 		}
 		return mintEditions(wallet, contract, params)
+	case "update_edition_metadata":
+		var params []UpdateEditionMetadataParam
+		if err := json.Unmarshal(arguments, &params); err != nil {
+			return nil, err
+		}
+		return updateEditionMetadata(wallet, contract, params)
 	default:
 		return nil, fmt.Errorf("unsupported method")
 	}
