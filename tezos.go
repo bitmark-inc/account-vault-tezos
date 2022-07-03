@@ -20,7 +20,7 @@ import (
 const (
 	DefaultAccountIndex = 0
 	MAINNETChainID      = "NetXdQprcVkpaWU"
-	ITHACANETChainID    = "NetXnHfVqm9iesp"
+	GHOSTNETChainID     = "NetXnHfVqm9iesp"
 	DefaultSignPrefix   = "Tezos Signed Message:"
 )
 
@@ -69,7 +69,7 @@ func NewWallet(seed []byte, network string, rpcURL string) (*Wallet, error) {
 		return nil, ErrInvalidRpcNode
 	}
 
-	chainID := ITHACANETChainID
+	chainID := GHOSTNETChainID
 	if network == "livenet" {
 		chainID = MAINNETChainID
 	}
@@ -164,7 +164,7 @@ func (w *Wallet) Send(args contract.CallArguments) (*string, error) {
 	op := codec.NewOp().WithTTL(opts.TTL)
 	op.WithContents(args.Encode())
 
-	if w.chainID == ITHACANETChainID {
+	if w.chainID == GHOSTNETChainID {
 		op.WithParams(tezos.IthacanetParams)
 	} else {
 		op.WithParams(tezos.DefaultParams)
