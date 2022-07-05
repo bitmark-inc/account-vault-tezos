@@ -130,8 +130,8 @@ func (p authTransferArgs) Prim() micheline.Prim {
 	return rs
 }
 
-// authTransfers call the authorized transfer entrypoint define in FeralFile contract
-func authTransfers(w *tezos.Wallet, con *contract.Contract, aps []AuthTransferParam) (*string, error) {
+// authTransfer call the authorized transfer entrypoint define in FeralFile contract
+func authTransfer(w *tezos.Wallet, con *contract.Contract, aps []AuthTransferParam) (*string, error) {
 	var aps_ []authTransferParam
 	for _, ap := range aps {
 		ap_, err := ap.Build()
@@ -146,7 +146,7 @@ func authTransfers(w *tezos.Wallet, con *contract.Contract, aps []AuthTransferPa
 	}
 
 	args.Params = micheline.Parameters{
-		Entrypoint: "authorized_transfers",
+		Entrypoint: "authorized_transfer",
 		Value:      args.Prim(),
 	}
 	args.WithDestination(con.Address())

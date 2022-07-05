@@ -50,12 +50,12 @@ func (c *FeralfileExhibitionV1Contract) Call(wallet *tezos.Wallet, method string
 			return nil, err
 		}
 		return transfer(wallet, contract, params)
-	case "authorized_transfers":
+	case "authorized_transfer":
 		var params []AuthTransferParam
 		if err := json.Unmarshal(arguments, &params); err != nil {
 			return nil, err
 		}
-		return authTransfers(wallet, contract, params)
+		return authTransfer(wallet, contract, params)
 	case "register_artworks":
 		var params []RegisterArtworkParam
 		if err := json.Unmarshal(arguments, &params); err != nil {
