@@ -45,7 +45,7 @@ func (c *FeralfileExhibitionV1Contract) Call(wallet *tezos.Wallet, method string
 
 	switch method {
 	case "transfer":
-		var params TransferParam
+		var params []TransferParam
 		if err := json.Unmarshal(arguments, &params); err != nil {
 			return nil, err
 		}

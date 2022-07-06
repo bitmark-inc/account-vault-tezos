@@ -42,24 +42,24 @@ type transferParam struct {
 	TokenID *big.Int
 }
 
-// transfer transfer a FA2 token
-func transfer(w *tezos.Wallet, con *contract.Contract, tp TransferParam) (*string, error) {
-	tp_, err := tp.Build()
-	if err != nil {
-		return nil, err
+// transfer transfer FA2 tokens
+func transfer(w *tezos.Wallet, con *contract.Contract, tps []TransferParam) (*string, error) {
+	// construct transfer arguments
+	args := contract.NewFA2TransferArgs()
+	for _, tp := range tps {
+		tp_, err := tp.Build()
+		if err != nil {
+			return nil, err
+		}
+		args.WithTransfer(
+			w.PrivateKey().Address(),
+			tp_.To,
+			(tz.Z)(*tp_.TokenID),
+			tz.NewZ(1),
+		)
 	}
-
-	// construct a FA2 token
-	token := con.AsFA2(0)
-	token.TokenId.Set(tp_.TokenID)
-
-	// construct simple transfer arguments
-	args := token.Transfer(
-		w.PrivateKey().Address(), // from
-		tp_.To,                   // to
-		tz.NewZ(1),               // amount
-	)
 	args.WithDestination(con.Address())
+	args.Optimize()
 
 	return w.Send(args)
 }
