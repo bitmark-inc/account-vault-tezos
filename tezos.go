@@ -165,7 +165,7 @@ func (w *Wallet) Send(args contract.CallArguments) (*string, error) {
 	op.WithContents(args.Encode())
 
 	if w.chainID == GHOSTNETChainID {
-		op.WithParams(tezos.IthacanetParams)
+		op.WithParams(tezos.GhostnetParams)
 	} else {
 		op.WithParams(tezos.DefaultParams)
 	}
@@ -273,9 +273,8 @@ func (w *Wallet) PrivateKey() tezos.PrivateKey {
 // DeriveAccount derive the specific index account from the master key
 func (w *Wallet) TransferXTZ(to string, amount int64) (*string, error) {
 	opts := &rpc.CallOptions{
-		TTL:          tezos.DefaultParams.MaxOperationsTTL - 2,
-		MaxFee:       10_000_000,
-		IgnoreLimits: true,
+		TTL:    tezos.DefaultParams.MaxOperationsTTL - 2,
+		MaxFee: 1_000_000,
 	}
 	ad, err := tezos.ParseAddress(to)
 	if err != nil {
