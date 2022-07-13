@@ -270,6 +270,23 @@ func (w *Wallet) PrivateKey() tezos.PrivateKey {
 	return w.privateKey
 }
 
+// DeriveAccount derive the specific index account from the master key
+func (w *Wallet) TransferXTZ(to string, amount int64) (*string, error) {
+	opts := &rpc.CallOptions{
+		TTL:          tezos.DefaultParams.MaxOperationsTTL - 2,
+		MaxFee:       10_000_000,
+		IgnoreLimits: true,
+	}
+	ad, err := tezos.ParseAddress(to)
+	if err != nil {
+		return nil, ErrInvalidAddress
+	}
+	// construct a transfer operation
+	op := codec.NewOp().WithTransfer(ad, amount)
+
+	return w.send(op, opts)
+}
+
 // convert an ed25519 hd private key to tzgo private key
 func toTzgoPrivateKey(edk ed25519hd.PrivateKey) tezos.PrivateKey {
 	key := tezos.PrivateKey{
