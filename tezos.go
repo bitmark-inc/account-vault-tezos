@@ -165,7 +165,7 @@ func (w *Wallet) Send(args contract.CallArguments) (*string, error) {
 	op.WithContents(args.Encode())
 
 	if w.chainID == GHOSTNETChainID {
-		op.WithParams(tezos.GhostnetParams)
+		op.WithParams(tezos.IthacanetParams)
 	} else {
 		op.WithParams(tezos.DefaultParams)
 	}
