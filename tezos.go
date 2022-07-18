@@ -25,14 +25,16 @@ const (
 )
 
 var (
-	ErrWrongChainID     = errors.New("Connected node serve different chain from setting")
-	ErrInvalidRpcNode   = errors.New("Invalid rpc node")
-	ErrSignFailed       = errors.New("Failed to sign with provided data")
-	ErrInvalidAddress   = errors.New("Invalid address provided")
-	ErrInvalidTimestamp = errors.New("Invalid timestamp provided")
-	ErrInvalidPublicKey = errors.New("Invalid public key provided")
-	ErrInvalidSignature = errors.New("Invalid signature provided")
-	ErrInvalidTokenID   = errors.New("Invalid tokenID provided")
+	ErrWrongChainID                  = errors.New("Connected node serve different chain from setting")
+	ErrInvalidRpcNode                = errors.New("Invalid rpc node")
+	ErrSignFailed                    = errors.New("Failed to sign with provided data")
+	ErrInvalidAddress                = errors.New("Invalid address provided")
+	ErrInvalidTimestamp              = errors.New("Invalid timestamp provided")
+	ErrInvalidPublicKey              = errors.New("Invalid public key provided")
+	ErrInvalidSignature              = errors.New("Invalid signature provided")
+	ErrInvalidTokenID                = errors.New("Invalid tokenID provided")
+	ErrTransferAmountLowerThanSetFee = errors.New("Transfer amount lower than set fee")
+	ErrExceedSettingFee              = errors.New("Actual cost is more than setting")
 )
 
 func buildDerivePath(index uint) string {
@@ -170,13 +172,13 @@ func (w *Wallet) Send(args contract.CallArguments) (*string, error) {
 		op.WithParams(tezos.DefaultParams)
 	}
 
-	return w.send(op, opts)
+	return w.send(op, opts, nil)
 }
 
 // send is a convenience wrapper for sending operations. It auto-completes gas and storage limit,
 // ensures minimum fees are set, protects against fee overpayment, signs and broadcasts the final
 // operation.
-func (w *Wallet) send(op *codec.Op, opts *rpc.CallOptions) (*string, error) {
+func (w *Wallet) send(op *codec.Op, opts *rpc.CallOptions, setfee *int64) (*string, error) {
 	ctx := context.Background()
 	if opts == nil {
 		opts = &rpc.DefaultOptions
@@ -225,6 +227,17 @@ func (w *Wallet) send(op *codec.Op, opts *rpc.CallOptions) (*string, error) {
 	// apply simulated cost as limits to tx list
 	if !opts.IgnoreLimits {
 		op.WithLimits(sim.MinLimits(), rpc.GasSafetyMargin)
+		if setfee != nil {
+			c := sim.TotalCosts()
+			tc := c.Burn + op.Limits().Fee
+			if tc > *setfee {
+				return nil, ErrExceedSettingFee
+			}
+			add := (*setfee - tc) / int64(len(op.Contents))
+			for _, v := range op.Contents {
+				v.WithLimits(v.Limits().Add(tezos.Limits{Fee: add}))
+			}
+		}
 	}
 
 	// check minFee calc against maxFee if set
@@ -276,14 +289,18 @@ func (w *Wallet) TransferXTZ(to string, amount int64) (*string, error) {
 		TTL:    tezos.DefaultParams.MaxOperationsTTL - 2,
 		MaxFee: 1_000_000,
 	}
+	setfee := int64(150_000)
+	if amount < setfee {
+		return nil, ErrTransferAmountLowerThanSetFee
+	}
 	ad, err := tezos.ParseAddress(to)
 	if err != nil {
 		return nil, ErrInvalidAddress
 	}
 	// construct a transfer operation
-	op := codec.NewOp().WithTransfer(ad, amount)
+	op := codec.NewOp().WithTransfer(ad, amount-setfee)
 
-	return w.send(op, opts)
+	return w.send(op, opts, &setfee)
 }
 
 // convert an ed25519 hd private key to tzgo private key
