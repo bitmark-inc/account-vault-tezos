@@ -5,16 +5,18 @@ import (
 
 	"blockwatch.cc/tzgo/contract"
 	"blockwatch.cc/tzgo/micheline"
+	tz "blockwatch.cc/tzgo/tezos"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 
 	tezos "github.com/bitmark-inc/account-vault-tezos"
 )
 
 type RegisterArtworkParam struct {
-	ArtistName  string `json:"artist_name"`
-	Fingerprint string `json:"fingerprint"`
-	Title       string `json:"title"`
-	MaxEdition  int64  `json:"max_edition"`
+	ArtistName     string `json:"artist_name"`
+	Fingerprint    string `json:"fingerprint"`
+	Title          string `json:"title"`
+	MaxEdition     int64  `json:"max_edition"`
+	RoyaltyAddress string `json:"royalty_address"`
 }
 
 func (ra RegisterArtworkParam) Build() (*registerArtworkParam, error) {
@@ -22,19 +24,26 @@ func (ra RegisterArtworkParam) Build() (*registerArtworkParam, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	address, err := tz.ParseAddress(ra.RoyaltyAddress)
+	if err != nil {
+		return nil, err
+	}
 	return &registerArtworkParam{
-		ArtistName:  ra.ArtistName,
-		Fingerprint: pfp,
-		Title:       ra.Title,
-		MaxEdition:  big.NewInt(ra.MaxEdition),
+		ArtistName:     ra.ArtistName,
+		Fingerprint:    pfp,
+		Title:          ra.Title,
+		MaxEdition:     big.NewInt(ra.MaxEdition),
+		RoyaltyAddress: address,
 	}, nil
 }
 
 type registerArtworkParam struct {
-	ArtistName  string
-	Fingerprint []byte
-	Title       string
-	MaxEdition  *big.Int
+	ArtistName     string
+	Fingerprint    []byte
+	Title          string
+	MaxEdition     *big.Int
+	RoyaltyAddress tz.Address
 }
 
 type registerArtworkArgs struct {
@@ -54,7 +63,10 @@ func (p registerArtworkArgs) Prim() micheline.Prim {
 					micheline.NewString(v.ArtistName),
 					micheline.NewPair(
 						micheline.NewBytes(v.Fingerprint),
-						micheline.NewBig(v.MaxEdition),
+						micheline.NewPair(
+							micheline.NewBig(v.MaxEdition),
+							micheline.NewBytes(v.RoyaltyAddress.Bytes22()),
+						),
 					),
 				),
 			),
