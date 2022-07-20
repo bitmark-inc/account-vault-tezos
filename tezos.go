@@ -123,12 +123,17 @@ func (w *Wallet) signMessage(message []byte) (string, error) {
 }
 
 // SignAuthTransferMessage sign the authorized transfer message from privateKey
-func (w *Wallet) SignAuthTransferMessage(to, tokenID string, expiry time.Time) (string, error) {
+func (w *Wallet) SignAuthTransferMessage(to, contractAddress, tokenID string, expiry time.Time) (string, error) {
 	// timestamp
 	ts := big.NewInt(expiry.Unix())
 
 	// address
 	ad, err := tezos.ParseAddress(to)
+	if err != nil {
+		return "", ErrInvalidAddress
+	}
+
+	contractAddr, err := tezos.ParseAddress(contractAddress)
 	if err != nil {
 		return "", ErrInvalidAddress
 	}
@@ -143,6 +148,12 @@ func (w *Wallet) SignAuthTransferMessage(to, tokenID string, expiry time.Time) (
 		Type: micheline.PrimInt,
 		Int:  ts,
 	}
+
+	ctp := micheline.Prim{
+		Type:  micheline.PrimBytes,
+		Bytes: contractAddr.Bytes22(),
+	}
+
 	adp := micheline.Prim{
 		Type:  micheline.PrimBytes,
 		Bytes: ad.Bytes22(),
@@ -152,7 +163,7 @@ func (w *Wallet) SignAuthTransferMessage(to, tokenID string, expiry time.Time) (
 		Int:  tk,
 	}
 
-	m := append(append(tsp.Pack(), adp.Pack()...), tkp.Pack()...)
+	m := append(append(append(tsp.Pack(), ctp.Pack()...), adp.Pack()...), tkp.Pack()...)
 	return w.signMessage(m)
 }
 
