@@ -49,6 +49,11 @@ type Wallet struct {
 	rpcClient    *rpc.Client
 }
 
+type TransferXTZParam struct {
+	To     string
+	Amount int64
+}
+
 // NewWallet creates a tezos wallet from a given seed
 func NewWallet(seed []byte, network string, rpcURL string) (*Wallet, error) {
 	pk, err := ed25519hd.GetMasterKeyFromSeed(seed)
@@ -183,13 +188,74 @@ func (w *Wallet) Send(args contract.CallArguments) (*string, error) {
 		op.WithParams(tezos.DefaultParams)
 	}
 
-	return w.send(op, opts, nil)
+	return w.send(op, opts)
+}
+
+func (w *Wallet) SimulateXTZTransferFee(txs []TransferXTZParam) (*int64, error) {
+	opts := &rpc.CallOptions{
+		TTL: tezos.DefaultParams.MaxOperationsTTL - 2,
+	}
+	op := codec.NewOp()
+	for _, tx := range txs {
+		ad, err := tezos.ParseAddress(tx.To)
+		if err != nil {
+			return nil, ErrInvalidAddress
+		}
+		// construct a transfer operation
+		op.WithTransfer(ad, tx.Amount)
+	}
+
+	ctx := context.Background()
+
+	signer := w.rpcClient.Signer
+
+	// identify the sender address for signing the message
+	addr := opts.Sender
+	if !addr.IsValid() {
+		addrs, err := signer.ListAddresses(ctx)
+		if err != nil {
+			return nil, err
+		}
+		addr = addrs[0]
+	}
+
+	key, err := signer.GetKey(ctx, addr)
+	if err != nil {
+		return nil, err
+	}
+
+	// set source on all ops
+	op.WithSource(key.Address())
+
+	// auto-complete op with branch/ttl, source counter, reveal
+	err = w.rpcClient.Complete(ctx, op, key)
+	if err != nil {
+		return nil, err
+	}
+
+	// simulate to check tx validity and estimate cost
+	sim, err := w.rpcClient.Simulate(ctx, op, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	// fail with Tezos error when simulation failed
+	if !sim.IsSuccess() {
+		return nil, sim.Error()
+	}
+
+	op.WithLimits(sim.MinLimits(), rpc.GasSafetyMargin)
+
+	c := sim.TotalCosts()
+	tc := c.Burn + op.Limits().Fee
+
+	return &tc, nil
 }
 
 // send is a convenience wrapper for sending operations. It auto-completes gas and storage limit,
 // ensures minimum fees are set, protects against fee overpayment, signs and broadcasts the final
 // operation.
-func (w *Wallet) send(op *codec.Op, opts *rpc.CallOptions, setfee *int64) (*string, error) {
+func (w *Wallet) send(op *codec.Op, opts *rpc.CallOptions) (*string, error) {
 	ctx := context.Background()
 	if opts == nil {
 		opts = &rpc.DefaultOptions
@@ -238,17 +304,6 @@ func (w *Wallet) send(op *codec.Op, opts *rpc.CallOptions, setfee *int64) (*stri
 	// apply simulated cost as limits to tx list
 	if !opts.IgnoreLimits {
 		op.WithLimits(sim.MinLimits(), rpc.GasSafetyMargin)
-		if setfee != nil {
-			c := sim.TotalCosts()
-			tc := c.Burn + op.Limits().Fee
-			if tc > *setfee {
-				return nil, ErrExceedSettingFee
-			}
-			add := (*setfee - tc) / int64(len(op.Contents))
-			for _, v := range op.Contents {
-				v.WithLimits(v.Limits().Add(tezos.Limits{Fee: add}))
-			}
-		}
 	}
 
 	// check minFee calc against maxFee if set
@@ -294,24 +349,35 @@ func (w *Wallet) PrivateKey() tezos.PrivateKey {
 	return w.privateKey
 }
 
-// DeriveAccount derive the specific index account from the master key
+// TransferXTZ transfer the xtz to destination
 func (w *Wallet) TransferXTZ(to string, amount int64) (*string, error) {
+	return w.BatchTransferXTZ(
+		[]TransferXTZParam{
+			{
+				To:     to,
+				Amount: amount,
+			},
+		},
+	)
+}
+
+// BatchTransferXTZ transfer the xtz to destinations
+func (w *Wallet) BatchTransferXTZ(txs []TransferXTZParam) (*string, error) {
 	opts := &rpc.CallOptions{
 		TTL:    tezos.DefaultParams.MaxOperationsTTL - 2,
 		MaxFee: 1_000_000,
 	}
-	setfee := int64(150_000)
-	if amount < setfee {
-		return nil, ErrTransferAmountLowerThanSetFee
+	op := codec.NewOp()
+	for _, tx := range txs {
+		ad, err := tezos.ParseAddress(tx.To)
+		if err != nil {
+			return nil, ErrInvalidAddress
+		}
+		// construct a transfer operation
+		op.WithTransfer(ad, tx.Amount)
 	}
-	ad, err := tezos.ParseAddress(to)
-	if err != nil {
-		return nil, ErrInvalidAddress
-	}
-	// construct a transfer operation
-	op := codec.NewOp().WithTransfer(ad, amount-setfee)
 
-	return w.send(op, opts, &setfee)
+	return w.send(op, opts)
 }
 
 // convert an ed25519 hd private key to tzgo private key
