@@ -233,21 +233,48 @@ func (w *Wallet) SimulateXTZTransferFee(txs []TransferXTZParam) (*int64, error) 
 		return nil, err
 	}
 
-	// simulate to check tx validity and estimate cost
+	bufferFee := int64(0)
+	// simulate to estimate cost
 	sim, err := w.rpcClient.Simulate(ctx, op, opts)
 	if err != nil {
-		return nil, err
-	}
+		// FIXME: hack around way to get the estimate fee using the lowest transfer amount
+		// have to find out a better way like include the tzStats SDK to get the current balance of account
+		// we don't have a better way to get the est. fee for tezos in tzgo now if the transfer amount is almost(same) as the entire account balance
 
-	// fail with Tezos error when simulation failed
-	if !sim.IsSuccess() {
-		return nil, sim.Error()
+		// New Op
+		op = codec.NewOp()
+
+		// construct a transfer operation with 0.000001 xtz to do brief fee estimation
+		for _, tx := range txs {
+			ad, err := tezos.ParseAddress(tx.To)
+			if err != nil {
+				return nil, ErrInvalidAddress
+			}
+			op.WithTransfer(ad, 1)
+		}
+
+		// set source on all ops
+		op.WithSource(key.Address())
+
+		// auto-complete op with branch/ttl, source counter, reveal
+		err = w.rpcClient.Complete(ctx, op, key)
+		if err != nil {
+			return nil, err
+		}
+
+		// simulate to estimate cost
+		sim, err = w.rpcClient.Simulate(ctx, op, opts)
+		if err != nil {
+			return nil, err
+		}
+
+		bufferFee = int64(1000)
 	}
 
 	op.WithLimits(sim.MinLimits(), rpc.GasSafetyMargin)
 
 	c := sim.TotalCosts()
-	tc := c.Burn + op.Limits().Fee
+	tc := c.Burn + op.Limits().Fee + bufferFee
 
 	return &tc, nil
 }
