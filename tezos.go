@@ -19,8 +19,6 @@ import (
 
 const (
 	DefaultAccountIndex = 0
-	MAINNETChainID      = "NetXdQprcVkpaWU"
-	GHOSTNETChainID     = "NetXnHfVqm9iesp"
 	DefaultSignPrefix   = "Tezos Signed Message:"
 )
 
@@ -42,7 +40,7 @@ func buildDerivePath(index uint) string {
 }
 
 type Wallet struct {
-	chainID      string
+	chainID      tezos.ChainIdHash
 	masterKey    ed25519hd.PrivateKey
 	privateKey   tezos.PrivateKey
 	accountIndex uint
@@ -76,17 +74,15 @@ func NewWallet(seed []byte, network string, rpcURL string) (*Wallet, error) {
 		return nil, ErrInvalidRpcNode
 	}
 
-	chainID := GHOSTNETChainID
+	// chainID := GHOSTNETChainID
 	if network == "livenet" {
-		chainID = MAINNETChainID
-	}
-	cChainID, _ := tezos.ParseChainIdHash(chainID)
-	if !c.ChainId.Equal(cChainID) {
-		return nil, ErrWrongChainID
+		if !c.ChainId.Equal(tezos.DefaultParams.ChainId) {
+			return nil, ErrWrongChainID
+		}
 	}
 
 	return &Wallet{
-		chainID:      chainID,
+		chainID:      c.ChainId,
 		masterKey:    *pk,
 		privateKey:   key,
 		accountIndex: DefaultAccountIndex,
@@ -182,8 +178,12 @@ func (w *Wallet) Send(args contract.CallArguments) (*string, error) {
 	op := codec.NewOp().WithTTL(opts.TTL)
 	op.WithContents(args.Encode())
 
-	if w.chainID == GHOSTNETChainID {
+	if w.chainID.Equal(tezos.GhostnetParams.ChainId) {
 		op.WithParams(tezos.GhostnetParams)
+	} else if w.chainID.Equal(tezos.JakartanetParams.ChainId) {
+		op.WithParams(tezos.JakartanetParams)
+	} else if w.chainID.Equal(tezos.KathmandunetParams.ChainId) {
+		op.WithParams(tezos.KathmandunetParams)
 	} else {
 		op.WithParams(tezos.DefaultParams)
 	}
@@ -368,7 +368,7 @@ func (w *Wallet) Account() string {
 
 // ChainID returns the tezos wallet ChainID
 func (w *Wallet) ChainID() string {
-	return w.chainID
+	return w.chainID.Hash.String()
 }
 
 // Account returns the private key

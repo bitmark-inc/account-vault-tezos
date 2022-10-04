@@ -15,6 +15,7 @@ type wallet struct {
 	network    string
 	index      uint
 	derivePath string
+	chainID    string
 }
 
 func TestNewWallet(t *testing.T) {
@@ -24,7 +25,7 @@ func TestNewWallet(t *testing.T) {
 		assert.Nil(t, err)
 		assert.EqualValues(t, w.account, nw.Account())
 		assert.EqualValues(t, nw.rpcClient, nw.RPCClient())
-		assert.EqualValues(t, nw.chainID, nw.ChainID())
+		assert.EqualValues(t, w.chainID, nw.ChainID())
 	}
 
 	for _, ww := range testWrongNetworkWallet() {
@@ -70,16 +71,26 @@ func testWallet() []wallet {
 		{
 			seed:    "063cafb67a29cb2c567a4ecba7edc856a54403952272bffd492caaf9095a9442b208d9f0d2b75a7b1cda59819c245949b9d7e4826e7ace8e19a970a080707fed",
 			account: "tz1TFmv27hNN1CV4XFP5TceGzsmDCrWTdWpd",
-			rpcURL:  "https://ithacanet.ecadinfra.com/",
+			rpcURL:  "https://uoi3x99n7c.ghostnet.tezosrpc.midl.dev",
 			network: "testnet",
 			index:   0,
+			chainID: "NetXnHfVqm9iesp",
 		},
 		{
 			seed:    "063cafb67a29cb2c567a4ecba7edc856a54403952272bffd492caaf9095a9442b208d9f0d2b75a7b1cda59819c245949b9d7e4826e7ace8e19a970a080707fed",
 			account: "tz1TFmv27hNN1CV4XFP5TceGzsmDCrWTdWpd",
-			rpcURL:  "https://mainnet-node.madfish.solutions",
+			rpcURL:  "https://rpc.kathmandunet.teztnets.xyz",
+			network: "testnet",
+			index:   0,
+			chainID: "NetXi2ZagzEsXbZ",
+		},
+		{
+			seed:    "063cafb67a29cb2c567a4ecba7edc856a54403952272bffd492caaf9095a9442b208d9f0d2b75a7b1cda59819c245949b9d7e4826e7ace8e19a970a080707fed",
+			account: "tz1TFmv27hNN1CV4XFP5TceGzsmDCrWTdWpd",
+			rpcURL:  "https://mainnet.smartpy.io",
 			network: "livenet",
 			index:   0,
+			chainID: "NetXdQprcVkpaWU",
 		},
 	}
 }
@@ -89,21 +100,21 @@ func testDeriveWallet() []wallet {
 		{
 			seed:    "063cafb67a29cb2c567a4ecba7edc856a54403952272bffd492caaf9095a9442b208d9f0d2b75a7b1cda59819c245949b9d7e4826e7ace8e19a970a080707fed",
 			account: "tz1TFmv27hNN1CV4XFP5TceGzsmDCrWTdWpd",
-			rpcURL:  "https://ithacanet.ecadinfra.com/",
+			rpcURL:  "https://uoi3x99n7c.ghostnet.tezosrpc.midl.dev",
 			network: "testnet",
 			index:   0,
 		},
 		{
 			seed:    "063cafb67a29cb2c567a4ecba7edc856a54403952272bffd492caaf9095a9442b208d9f0d2b75a7b1cda59819c245949b9d7e4826e7ace8e19a970a080707fed",
 			account: "tz1b4FWeKgXysDkeeHMaxy516PXB3Lni6Rpa",
-			rpcURL:  "https://mainnet-node.madfish.solutions",
+			rpcURL:  "https://mainnet.smartpy.io",
 			network: "livenet",
 			index:   1,
 		},
 		{
 			seed:    "063cafb67a29cb2c567a4ecba7edc856a54403952272bffd492caaf9095a9442b208d9f0d2b75a7b1cda59819c245949b9d7e4826e7ace8e19a970a080707fed",
 			account: "tz1ZRqZEaiwyrMGtZDfxhtMjqijaNy5oFpgK",
-			rpcURL:  "https://mainnet-node.madfish.solutions",
+			rpcURL:  "https://mainnet.smartpy.io",
 			network: "livenet",
 			index:   2,
 		},
@@ -115,14 +126,8 @@ func testWrongNetworkWallet() []wallet {
 		{
 			seed:    "063cafb67a29cb2c567a4ecba7edc856a54403952272bffd492caaf9095a9442b208d9f0d2b75a7b1cda59819c245949b9d7e4826e7ace8e19a970a080707fed",
 			account: "tz1TFmv27hNN1CV4XFP5TceGzsmDCrWTdWpd",
-			rpcURL:  "https://ithacanet.ecadinfra.com/",
+			rpcURL:  "https://uoi3x99n7c.ghostnet.tezosrpc.midl.dev",
 			network: "livenet",
-		},
-		{
-			seed:    "063cafb67a29cb2c567a4ecba7edc856a54403952272bffd492caaf9095a9442b208d9f0d2b75a7b1cda59819c245949b9d7e4826e7ace8e19a970a080707fed",
-			account: "tz1TFmv27hNN1CV4XFP5TceGzsmDCrWTdWpd",
-			rpcURL:  "https://mainnet-node.madfish.solutions",
-			network: "testnet",
 		},
 	}
 }
@@ -131,12 +136,12 @@ func testWrongSeedSizeWallet() []wallet {
 	return []wallet{
 		{
 			seed:    "063cafb67a29cb2c567a4ecba7edc856a54403952272bffd492caaf9095a9442b208d9f0d2b75a7b1cda59819c245949b9d7e4826e7ace8e19a970a080707feded",
-			rpcURL:  "https://ithacanet.ecadinfra.com/",
+			rpcURL:  "https://uoi3x99n7c.ghostnet.tezosrpc.midl.dev",
 			network: "livenet",
 		},
 		{
 			seed:    "063cafb67",
-			rpcURL:  "https://mainnet-node.madfish.solutions",
+			rpcURL:  "https://mainnet.smartpy.io",
 			network: "testnet",
 		},
 	}
@@ -156,7 +161,7 @@ func testWrongDerivePathWallet() []wallet {
 	return []wallet{
 		{
 			seed:    "063cafb67a29cb2c567a4ecba7edc856a54403952272bffd492caaf9095a9442b208d9f0d2b75a7b1cda59819c245949b9d7e4826e7ace8e19a970a080707fed",
-			rpcURL:  "https://mainnet-node.madfish.solutions",
+			rpcURL:  "https://mainnet.smartpy.io",
 			network: "livenet",
 			index:   2147483648,
 		},
