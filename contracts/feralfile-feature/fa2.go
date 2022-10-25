@@ -1,4 +1,4 @@
-package feralfilev1
+package feralfilefeature
 
 import (
 	"math/big"
@@ -43,7 +43,7 @@ type transferParam struct {
 }
 
 // transfer transfer FA2 tokens
-func transfer(w *tezos.Wallet, con *contract.Contract, tps []TransferParam) (*string, error) {
+func Transfer(w *tezos.Wallet, con *contract.Contract, tps []TransferParam) (*string, error) {
 	// construct transfer arguments
 	args := contract.NewFA2TransferArgs()
 	for _, tp := range tps {

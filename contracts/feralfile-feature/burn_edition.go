@@ -1,4 +1,4 @@
-package feralfilev1
+package feralfilefeature
 
 import (
 	"math/big"
@@ -47,7 +47,7 @@ func (p burnEditionsArgs) Prim() micheline.Prim {
 }
 
 // burnEditions burn the editions
-func burnEditions(w *tezos.Wallet, con *contract.Contract, bes []BurnEditionsParam) (*string, error) {
+func BurnEditions(w *tezos.Wallet, con *contract.Contract, bes []BurnEditionsParam) (*string, error) {
 	var _bes []burnEditionsParam
 	for _, be := range bes {
 		_be, err := be.Build()

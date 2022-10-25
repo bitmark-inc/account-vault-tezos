@@ -1,4 +1,4 @@
-package feralfilev1
+package feralfilev2
 
 import (
 	"encoding/json"
@@ -11,24 +11,24 @@ import (
 	fff "github.com/bitmark-inc/account-vault-tezos/contracts/feralfile-feature"
 )
 
-type FeralfileExhibitionV1Contract struct {
+type FeralfileExhibitionV2Contract struct {
 	contractAddress string
 }
 
 func FeralfileExhibitionV1ContractFactory(contractAddress string) tezos.Contract {
-	return &FeralfileExhibitionV1Contract{
+	return &FeralfileExhibitionV2Contract{
 		contractAddress: contractAddress,
 	}
 }
 
 // FIXME: TODO
 // Deploy deploys the smart contract to tezos blockchain
-func (c *FeralfileExhibitionV1Contract) Deploy(wallet *tezos.Wallet, arguments json.RawMessage) (string, string, error) {
+func (c *FeralfileExhibitionV2Contract) Deploy(wallet *tezos.Wallet, arguments json.RawMessage) (string, string, error) {
 	return "", "", nil
 }
 
 // Call is the entry function for account vault to interact with a smart contract.
-func (c *FeralfileExhibitionV1Contract) Call(wallet *tezos.Wallet, method string, arguments json.RawMessage) (*string, error) {
+func (c *FeralfileExhibitionV2Contract) Call(wallet *tezos.Wallet, method string, arguments json.RawMessage) (*string, error) {
 	ca, err := tz.ParseAddress(c.contractAddress)
 	if err != nil {
 		return nil, fff.ErrInvalidAddress
@@ -50,11 +50,11 @@ func (c *FeralfileExhibitionV1Contract) Call(wallet *tezos.Wallet, method string
 		}
 		return fff.AuthTransfer(wallet, contract, params)
 	case "register_artworks":
-		var params []RegisterArtworkParam
+		var params []fff.RegisterArtworkParam
 		if err := json.Unmarshal(arguments, &params); err != nil {
 			return nil, err
 		}
-		return RegisterArtworks(wallet, contract, params)
+		return fff.RegisterArtworks(wallet, contract, params)
 	case "mint_editions":
 		var params []fff.MintEditionParam
 		if err := json.Unmarshal(arguments, &params); err != nil {
@@ -79,5 +79,5 @@ func (c *FeralfileExhibitionV1Contract) Call(wallet *tezos.Wallet, method string
 }
 
 func init() {
-	tezos.RegisterContract("FeralfileExhibitionV1", FeralfileExhibitionV1ContractFactory)
+	tezos.RegisterContract("FeralfileExhibitionV2", FeralfileExhibitionV1ContractFactory)
 }

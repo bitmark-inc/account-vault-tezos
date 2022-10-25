@@ -1,4 +1,4 @@
-package feralfilev1
+package feralfilefeature
 
 import (
 	"math/big"
@@ -41,7 +41,7 @@ func (p updateEditionMetadataParam) Prim() micheline.Prim {
 	return micheline.NewPair(
 		micheline.NewBig(p.TokenID),
 		micheline.NewSeq(
-			newElt(
+			NewElt(
 				micheline.NewString(""),
 				micheline.NewBytes(p.IPFSLink),
 			),
@@ -60,7 +60,7 @@ func (p updateEditionMetadataArgs) Prim() micheline.Prim {
 }
 
 // updateEditionMetadata update the edition token metadata
-func updateEditionMetadata(w *tezos.Wallet, con *contract.Contract, uem []UpdateEditionMetadataParam) (*string, error) {
+func UpdateEditionMetadata(w *tezos.Wallet, con *contract.Contract, uem []UpdateEditionMetadataParam) (*string, error) {
 	var _uem []updateEditionMetadataParam
 	for _, ue := range uem {
 		ue_, err := ue.Build()

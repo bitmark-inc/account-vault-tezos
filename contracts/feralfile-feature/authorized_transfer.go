@@ -1,4 +1,4 @@
-package feralfilev1
+package feralfilefeature
 
 import (
 	"math/big"
@@ -131,7 +131,7 @@ func (p authTransferArgs) Prim() micheline.Prim {
 }
 
 // authTransfer call the authorized transfer entrypoint define in FeralFile contract
-func authTransfer(w *tezos.Wallet, con *contract.Contract, aps []AuthTransferParam) (*string, error) {
+func AuthTransfer(w *tezos.Wallet, con *contract.Contract, aps []AuthTransferParam) (*string, error) {
 	var aps_ []authTransferParam
 	for _, ap := range aps {
 		ap_, err := ap.Build()

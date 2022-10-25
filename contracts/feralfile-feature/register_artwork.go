@@ -1,4 +1,4 @@
-package feralfilev1
+package feralfilefeature
 
 import (
 	"math/big"
@@ -16,6 +16,8 @@ type RegisterArtworkParam struct {
 	Fingerprint    string `json:"fingerprint"`
 	Title          string `json:"title"`
 	MaxEdition     int64  `json:"max_edition"`
+	AEAmount       int64  `json:"ae_amount"`
+	PPAmount       int64  `json:"pp_amount"`
 	RoyaltyAddress string `json:"royalty_address"`
 }
 
@@ -34,6 +36,8 @@ func (ra RegisterArtworkParam) Build() (*registerArtworkParam, error) {
 		Fingerprint:    pfp,
 		Title:          ra.Title,
 		MaxEdition:     big.NewInt(ra.MaxEdition),
+		AEAmount:       big.NewInt(ra.AEAmount),
+		PPAmount:       big.NewInt(ra.PPAmount),
 		RoyaltyAddress: address,
 	}, nil
 }
@@ -43,6 +47,8 @@ type registerArtworkParam struct {
 	Fingerprint    []byte
 	Title          string
 	MaxEdition     *big.Int
+	AEAmount       *big.Int
+	PPAmount       *big.Int
 	RoyaltyAddress tz.Address
 }
 
@@ -65,7 +71,13 @@ func (p registerArtworkArgs) Prim() micheline.Prim {
 						micheline.NewBytes(v.Fingerprint),
 						micheline.NewPair(
 							micheline.NewBig(v.MaxEdition),
-							micheline.NewBytes(v.RoyaltyAddress.Bytes22()),
+							micheline.NewPair(
+								micheline.NewBig(v.AEAmount),
+								micheline.NewPair(
+									micheline.NewBig(v.PPAmount),
+									micheline.NewBytes(v.RoyaltyAddress.Bytes22()),
+								),
+							),
 						),
 					),
 				),
@@ -75,7 +87,7 @@ func (p registerArtworkArgs) Prim() micheline.Prim {
 	return rs
 }
 
-// registerArtworks register new artworks
+// RegisterArtworks register new artworks
 func RegisterArtworks(w *tezos.Wallet, con *contract.Contract, ras []RegisterArtworkParam) (*string, error) {
 	var ras_ []registerArtworkParam
 	for _, ra := range ras {

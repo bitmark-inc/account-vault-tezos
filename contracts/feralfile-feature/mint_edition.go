@@ -1,4 +1,4 @@
-package feralfilev1
+package feralfilefeature
 
 import (
 	"encoding/hex"
@@ -79,7 +79,7 @@ func (p mintEditionParam) Prim() micheline.Prim {
 		rs.Args = append(rs.Args,
 			micheline.NewPair(
 				micheline.NewSeq(
-					newElt(
+					NewElt(
 						micheline.NewString(""),
 						micheline.NewBytes(v.IPFSLink),
 					),
@@ -109,7 +109,7 @@ func (p mintEditionArgs) Prim() micheline.Prim {
 }
 
 // mintEditions mint edition tokens for artworks
-func mintEditions(w *tezos.Wallet, con *contract.Contract, mes []MintEditionParam) (*string, error) {
+func MintEditions(w *tezos.Wallet, con *contract.Contract, mes []MintEditionParam) (*string, error) {
 	var mes_ []mintEditionParam
 	for _, me := range mes {
 		me_, err := me.Build()
