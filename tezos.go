@@ -180,10 +180,8 @@ func (w *Wallet) Send(args contract.CallArguments) (*string, error) {
 
 	if w.chainID.Equal(tezos.GhostnetParams.ChainId) {
 		op.WithParams(tezos.GhostnetParams)
-	} else if w.chainID.Equal(tezos.JakartanetParams.ChainId) {
-		op.WithParams(tezos.JakartanetParams)
-	} else if w.chainID.Equal(tezos.KathmandunetParams.ChainId) {
-		op.WithParams(tezos.KathmandunetParams)
+	} else if w.chainID.Equal(tezos.LimanetParams.ChainId) {
+		op.WithParams(tezos.LimanetParams)
 	} else {
 		op.WithParams(tezos.DefaultParams)
 	}
@@ -205,10 +203,8 @@ func (w *Wallet) SendOperations(ops []codec.Operation) (*string, error) {
 
 	if w.chainID.Equal(tezos.GhostnetParams.ChainId) {
 		op.WithParams(tezos.GhostnetParams)
-	} else if w.chainID.Equal(tezos.JakartanetParams.ChainId) {
-		op.WithParams(tezos.JakartanetParams)
-	} else if w.chainID.Equal(tezos.KathmandunetParams.ChainId) {
-		op.WithParams(tezos.KathmandunetParams)
+	} else if w.chainID.Equal(tezos.LimanetParams.ChainId) {
+		op.WithParams(tezos.LimanetParams)
 	} else {
 		op.WithParams(tezos.DefaultParams)
 	}
