@@ -180,10 +180,31 @@ func (w *Wallet) Send(args contract.CallArguments) (*string, error) {
 
 	if w.chainID.Equal(tezos.GhostnetParams.ChainId) {
 		op.WithParams(tezos.GhostnetParams)
-	} else if w.chainID.Equal(tezos.JakartanetParams.ChainId) {
-		op.WithParams(tezos.JakartanetParams)
-	} else if w.chainID.Equal(tezos.KathmandunetParams.ChainId) {
-		op.WithParams(tezos.KathmandunetParams)
+	} else if w.chainID.Equal(tezos.LimanetParams.ChainId) {
+		op.WithParams(tezos.LimanetParams)
+	} else {
+		op.WithParams(tezos.DefaultParams)
+	}
+
+	return w.send(op, opts)
+}
+
+// SendOperations will send list of operations to tezos blockchain and return hash
+func (w *Wallet) SendOperations(ops []codec.Operation) (*string, error) {
+	opts := &rpc.CallOptions{
+		TTL:    tezos.DefaultParams.MaxOperationsTTL - 2,
+		MaxFee: 10_000_000,
+	}
+
+	op := codec.NewOp().WithTTL(opts.TTL)
+	for _, o := range ops {
+		op.WithContents(o)
+	}
+
+	if w.chainID.Equal(tezos.GhostnetParams.ChainId) {
+		op.WithParams(tezos.GhostnetParams)
+	} else if w.chainID.Equal(tezos.LimanetParams.ChainId) {
+		op.WithParams(tezos.LimanetParams)
 	} else {
 		op.WithParams(tezos.DefaultParams)
 	}

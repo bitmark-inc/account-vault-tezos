@@ -3,7 +3,7 @@ module github.com/bitmark-inc/account-vault-tezos
 go 1.18
 
 require (
-	blockwatch.cc/tzgo v1.14.1
+	blockwatch.cc/tzgo v1.15.1
 	github.com/bitmark-inc/go-ed25519-hd v0.0.0-20220525024501-4e0cd259ca98
 	github.com/ethereum/go-ethereum v1.10.8
 	github.com/stretchr/testify v1.7.1
