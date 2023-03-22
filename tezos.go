@@ -97,12 +97,15 @@ func (w *Wallet) DeriveAccount(index uint) (*Wallet, error) {
 		return nil, err
 	}
 	key := toTzgoPrivateKey(*dpk)
+	rpc := w.rpcClient
+	rpc.Signer = signer.NewFromKey(key)
+
 	return &Wallet{
 		chainID:      w.chainID,
 		masterKey:    w.masterKey,
 		privateKey:   key,
 		accountIndex: index,
-		rpcClient:    w.rpcClient,
+		rpcClient:    rpc,
 	}, nil
 }
 
