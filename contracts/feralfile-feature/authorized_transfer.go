@@ -96,7 +96,7 @@ func (p authTransferParam) Prim() micheline.Prim {
 	for _, v := range p.Txs {
 		rs.Args = append(rs.Args,
 			micheline.NewPair(
-				micheline.NewBytes(v.To.Bytes22()),
+				micheline.NewBytes(v.To.EncodePadded()),
 				micheline.NewPair(
 					micheline.NewBig(v.TokenID),
 					micheline.NewPair(
@@ -115,7 +115,7 @@ func (p authTransferArgs) Prim() micheline.Prim {
 	for i, v := range p.Transfers {
 		rs.Args = append(rs.Args,
 			micheline.NewPair(
-				micheline.NewBytes(v.From.Bytes22()),
+				micheline.NewBytes(v.From.EncodePadded()),
 				micheline.NewPair(
 					micheline.NewBytes(v.PK.Bytes()),
 					micheline.NewPair(

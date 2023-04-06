@@ -71,7 +71,7 @@ func testWallet() []wallet {
 		{
 			seed:    "063cafb67a29cb2c567a4ecba7edc856a54403952272bffd492caaf9095a9442b208d9f0d2b75a7b1cda59819c245949b9d7e4826e7ace8e19a970a080707fed",
 			account: "tz1TFmv27hNN1CV4XFP5TceGzsmDCrWTdWpd",
-			rpcURL:  "https://uoi3x99n7c.ghostnet.tezosrpc.midl.dev",
+			rpcURL:  "https://rpc.ghost.tzstats.com",
 			network: "testnet",
 			index:   0,
 			chainID: "NetXnHfVqm9iesp",
@@ -79,10 +79,10 @@ func testWallet() []wallet {
 		{
 			seed:    "063cafb67a29cb2c567a4ecba7edc856a54403952272bffd492caaf9095a9442b208d9f0d2b75a7b1cda59819c245949b9d7e4826e7ace8e19a970a080707fed",
 			account: "tz1TFmv27hNN1CV4XFP5TceGzsmDCrWTdWpd",
-			rpcURL:  "https://rpc.kathmandunet.teztnets.xyz",
-			network: "testnet",
+			rpcURL:  "https://rpc.tzstats.com",
+			network: "livenet",
 			index:   0,
-			chainID: "NetXi2ZagzEsXbZ",
+			chainID: "NetXdQprcVkpaWU",
 		},
 		{
 			seed:    "063cafb67a29cb2c567a4ecba7edc856a54403952272bffd492caaf9095a9442b208d9f0d2b75a7b1cda59819c245949b9d7e4826e7ace8e19a970a080707fed",
@@ -100,7 +100,7 @@ func testDeriveWallet() []wallet {
 		{
 			seed:    "063cafb67a29cb2c567a4ecba7edc856a54403952272bffd492caaf9095a9442b208d9f0d2b75a7b1cda59819c245949b9d7e4826e7ace8e19a970a080707fed",
 			account: "tz1TFmv27hNN1CV4XFP5TceGzsmDCrWTdWpd",
-			rpcURL:  "https://uoi3x99n7c.ghostnet.tezosrpc.midl.dev",
+			rpcURL:  "https://rpc.ghost.tzstats.com",
 			network: "testnet",
 			index:   0,
 		},
@@ -126,7 +126,7 @@ func testWrongNetworkWallet() []wallet {
 		{
 			seed:    "063cafb67a29cb2c567a4ecba7edc856a54403952272bffd492caaf9095a9442b208d9f0d2b75a7b1cda59819c245949b9d7e4826e7ace8e19a970a080707fed",
 			account: "tz1TFmv27hNN1CV4XFP5TceGzsmDCrWTdWpd",
-			rpcURL:  "https://uoi3x99n7c.ghostnet.tezosrpc.midl.dev",
+			rpcURL:  "https://rpc.ghost.tzstats.com",
 			network: "livenet",
 		},
 	}
@@ -136,7 +136,7 @@ func testWrongSeedSizeWallet() []wallet {
 	return []wallet{
 		{
 			seed:    "063cafb67a29cb2c567a4ecba7edc856a54403952272bffd492caaf9095a9442b208d9f0d2b75a7b1cda59819c245949b9d7e4826e7ace8e19a970a080707feded",
-			rpcURL:  "https://uoi3x99n7c.ghostnet.tezosrpc.midl.dev",
+			rpcURL:  "https://rpc.ghost.tzstats.com",
 			network: "livenet",
 		},
 		{

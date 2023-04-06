@@ -99,7 +99,7 @@ func (p mintEditionArgs) Prim() micheline.Prim {
 	for i, v := range p.Editions {
 		rs.Args = append(rs.Args,
 			micheline.NewPair(
-				micheline.NewBytes(v.Owner.Bytes22()),
+				micheline.NewBytes(v.Owner.EncodePadded()),
 				micheline.NewSeq(),
 			),
 		)

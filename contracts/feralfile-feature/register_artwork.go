@@ -75,7 +75,7 @@ func (p registerArtworkArgs) Prim() micheline.Prim {
 								micheline.NewBig(v.AEAmount),
 								micheline.NewPair(
 									micheline.NewBig(v.PPAmount),
-									micheline.NewBytes(v.RoyaltyAddress.Bytes22()),
+									micheline.NewBytes(v.RoyaltyAddress.EncodePadded()),
 								),
 							),
 						),

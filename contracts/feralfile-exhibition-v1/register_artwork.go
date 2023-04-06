@@ -65,7 +65,7 @@ func (p registerArtworkArgs) Prim() micheline.Prim {
 						micheline.NewBytes(v.Fingerprint),
 						micheline.NewPair(
 							micheline.NewBig(v.MaxEdition),
-							micheline.NewBytes(v.RoyaltyAddress.Bytes22()),
+							micheline.NewBytes(v.RoyaltyAddress.EncodePadded()),
 						),
 					),
 				),

@@ -155,12 +155,12 @@ func (w *Wallet) SignAuthTransferMessage(to, contractAddress, tokenID string, ex
 
 	ctp := micheline.Prim{
 		Type:  micheline.PrimBytes,
-		Bytes: contractAddr.Bytes22(),
+		Bytes: contractAddr.EncodePadded(),
 	}
 
 	adp := micheline.Prim{
 		Type:  micheline.PrimBytes,
-		Bytes: ad.Bytes22(),
+		Bytes: ad.EncodePadded(),
 	}
 	tkp := micheline.Prim{
 		Type: micheline.PrimInt,
@@ -183,8 +183,6 @@ func (w *Wallet) Send(args contract.CallArguments) (*string, error) {
 
 	if w.chainID.Equal(tezos.GhostnetParams.ChainId) {
 		op.WithParams(tezos.GhostnetParams)
-	} else if w.chainID.Equal(tezos.LimanetParams.ChainId) {
-		op.WithParams(tezos.LimanetParams)
 	} else {
 		op.WithParams(tezos.DefaultParams)
 	}
@@ -206,8 +204,6 @@ func (w *Wallet) SendOperations(ops []codec.Operation) (*string, error) {
 
 	if w.chainID.Equal(tezos.GhostnetParams.ChainId) {
 		op.WithParams(tezos.GhostnetParams)
-	} else if w.chainID.Equal(tezos.LimanetParams.ChainId) {
-		op.WithParams(tezos.LimanetParams)
 	} else {
 		op.WithParams(tezos.DefaultParams)
 	}
@@ -392,7 +388,7 @@ func (w *Wallet) Account() string {
 
 // ChainID returns the tezos wallet ChainID
 func (w *Wallet) ChainID() string {
-	return w.chainID.Hash.String()
+	return w.chainID.String()
 }
 
 // Account returns the private key
